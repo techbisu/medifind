@@ -1,0 +1,308 @@
+// Prisma schema for MediFind SaaS - Doctor/MedicalShop/ClinicLab platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// USERS & AUTH
+// ============================================================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  name         String
+  phone        String?
+  role         String   @default("PUBLIC") // PUBLIC | PROVIDER | ADMIN
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  providers      Provider[]
+  appointments   Appointment[]
+  reviews        Review[]
+  subscriptions  Subscription[]
+}
+
+// ============================================================
+// PROVIDERS (polymorphic: DOCTOR | MEDICAL_SHOP | CLINIC_LAB)
+// ============================================================
+
+model Provider {
+  id              String   @id @default(cuid())
+  userId          String
+  type            String   // DOCTOR | MEDICAL_SHOP | CLINIC_LAB
+  name            String
+  slug            String   @unique
+  tagline         String?
+  description     String?
+  logoUrl         String?
+  coverUrl        String?
+  phone           String?
+  email           String?
+  website         String?
+  address         String?
+  city            String?
+  area            String?
+  pincode         String?
+  latitude        Float?
+  longitude       Float?
+  status          String   @default("PENDING") // PENDING | APPROVED | SUSPENDED | REJECTED
+  verified        Boolean  @default(false)
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  viewCount       Int      @default(0)
+  subscriptionTier String  @default("FREE") // FREE | PRO | ENTERPRISE
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  doctorProfile   DoctorProfile?
+  shopServices    ShopService[]
+  labTests        LabTest[]
+  chambers        Chamber[]      @relation("DoctorChambers") // If doctor - their chambers
+  shopChambers    Chamber[]      @relation("ShopChambers")   // If shop - chambers hosted here
+  appointments    Appointment[]
+  reviews         Review[]
+  subscriptions   Subscription[]
+
+  @@index([type, status, city])
+  @@index([slug])
+}
+
+// ============================================================
+// DOCTOR PROFILE (extended info for DOCTOR type providers)
+// ============================================================
+
+model DoctorProfile {
+  id               String   @id @default(cuid())
+  providerId       String   @unique
+  specialty        String?  // e.g. "Cardiologist"
+  specialtiesJson  String   @default("[]") // JSON array of specialty strings
+  qualifications   String?
+  experienceYears  Int      @default(0)
+  consultationFee  Float    @default(0)
+  languagesJson    String   @default("[]") // JSON array
+  healthIssuesJson String   @default("[]") // JSON array of conditions treated
+  about            String?
+  gender           String?
+  registrationNo   String?
+
+  provider         Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([specialty])
+}
+
+// ============================================================
+// CHAMBER (Doctor's consultation location - own or at a shop)
+// ============================================================
+
+model Chamber {
+  id              String   @id @default(cuid())
+  doctorProviderId String
+  shopProviderId  String?  // null = own chamber; non-null = chamber hosted at a medical shop
+  name            String
+  address         String?
+  phone           String?
+  city            String?
+  area            String?
+  visitingHours   String?  // human-readable summary
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  doctor          Provider @relation("DoctorChambers", fields: [doctorProviderId], references: [id], onDelete: Cascade)
+  shop            Provider? @relation("ShopChambers", fields: [shopProviderId], references: [id], onDelete: SetNull)
+  schedules       Schedule[]
+  appointments    Appointment[]
+
+  @@index([doctorProviderId])
+  @@index([shopProviderId])
+}
+
+// ============================================================
+// SCHEDULE / TIME TABLE (per chamber, per day of week)
+// ============================================================
+
+model Schedule {
+  id          String   @id @default(cuid())
+  chamberId   String
+  dayOfWeek   Int      // 0 = Sunday ... 6 = Saturday
+  startTime   String   // "09:00"
+  endTime     String   // "13:00"
+  maxPatients Int      @default(10)
+  isAvailable Boolean  @default(true)
+  notes       String?
+
+  chamber     Chamber  @relation(fields: [chamberId], references: [id], onDelete: Cascade)
+
+  @@index([chamberId, dayOfWeek])
+}
+
+// ============================================================
+// APPOINTMENTS
+// ============================================================
+
+model Appointment {
+  id             String   @id @default(cuid())
+  providerId     String
+  chamberId      String?
+  userId         String?  // logged-in user, otherwise guest
+  patientName    String
+  patientPhone   String
+  patientEmail   String?
+  patientAge     Int?
+  patientGender  String?
+  healthIssue    String?
+  notes          String?
+  preferredDate  String   // ISO date string "2026-08-20"
+  preferredTime  String?
+  status         String   @default("PENDING") // PENDING | CONFIRMED | CANCELLED | COMPLETED | NO_SHOW
+  fee            Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  provider       Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  chamber        Chamber? @relation(fields: [chamberId], references: [id], onDelete: SetNull)
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([providerId, status])
+  @@index([patientPhone])
+}
+
+// ============================================================
+// SHOP SERVICES (offered by MEDICAL_SHOP type providers)
+// ============================================================
+
+model ShopService {
+  id          String   @id @default(cuid())
+  providerId  String
+  name        String
+  description String?
+  price       Float    @default(0)
+  category    String?  // e.g. "Pharmacy", "Equipment", "Consultation"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, category])
+}
+
+// ============================================================
+// LAB TESTS (offered by CLINIC_LAB type providers)
+// ============================================================
+
+model LabTest {
+  id           String   @id @default(cuid())
+  providerId   String
+  name         String
+  description  String?
+  price        Float    @default(0)
+  discountPrice Float?
+  category     String?  // e.g. "Blood Test", "Urine", "Imaging"
+  sampleType   String?  // e.g. "Blood", "Urine", "Saliva"
+  reportTime   String?  // e.g. "24 hours"
+  fastingRequired Boolean @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  provider     Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, category])
+}
+
+// ============================================================
+// REVIEWS
+// ============================================================
+
+model Review {
+  id         String   @id @default(cuid())
+  providerId String
+  userId     String?
+  userName   String
+  rating     Int      // 1-5
+  comment    String?
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([providerId, createdAt])
+}
+
+// ============================================================
+// SUBSCRIPTION PLANS & SUBSCRIPTIONS (SaaS billing)
+// ============================================================
+
+model Plan {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  tier            String   @unique // FREE | PRO | ENTERPRISE
+  price           Float    @default(0)
+  billingCycle    String   @default("MONTHLY") // MONTHLY | YEARLY
+  description     String?
+  featuresJson    String   @default("[]") // JSON array of feature strings
+  maxChambers     Int      @default(1)
+  maxLabTests     Int      @default(5)
+  maxShopServices Int      @default(5)
+  priorityListing Boolean  @default(false)
+  verifiedBadge   Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+
+  subscriptions   Subscription[]
+}
+
+model Subscription {
+  id          String   @id @default(cuid())
+  providerId  String
+  userId      String
+  planId      String
+  status      String   @default("ACTIVE") // ACTIVE | CANCELLED | EXPIRED | PENDING
+  startDate   DateTime @default(now())
+  endDate     DateTime?
+  autoRenew   Boolean  @default(false)
+  amountPaid  Float    @default(0)
+  createdAt   DateTime @default(now())
+
+  provider    Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        Plan     @relation(fields: [planId], references: [id])
+
+  @@index([providerId, status])
+}
+
+// ============================================================
+// SPECIALTIES (catalog - for filtering)
+// ============================================================
+
+model Specialty {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  icon        String?
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// ============================================================
+// HEALTH ISSUES (catalog - for filtering/search)
+// ============================================================
+
+model HealthIssue {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  category    String?  // e.g. "Cardiac", "Diabetes", "Respiratory"
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
