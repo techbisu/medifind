@@ -10,8 +10,9 @@ import { ProviderCard } from '@/components/provider-card'
 import {
   Search, MapPin, Stethoscope, Building2, Beaker, PlusCircle,
   Calendar, Shield, Star, Users, ArrowRight, Clock,
-  CheckCircle2, Heart
+  CheckCircle2, Heart, Navigation, Loader2, LocateFixed
 } from 'lucide-react'
+import { toast } from 'sonner'
 import type { ProviderDTO } from '@/lib/providers'
 
 const SPECIALTIES = [
@@ -48,11 +49,12 @@ const TYPE_CARDS = [
 ]
 
 export function HomeView() {
-  const { setView, setSearch, runSearch } = useAppStore()
+  const { setView, setSearch, runSearch, setUserLocation, setSortBy, userLocation } = useAppStore()
   const [query, setQuery] = useState('')
   const [city, setCity] = useState('')
   const [featured, setFeatured] = useState<ProviderDTO[]>([])
   const [stats, setStats] = useState({ doctors: 0, shops: 0, labs: 0 })
+  const [locating, setLocating] = useState(false)
 
   useEffect(() => {
     fetch('/api/providers?limit=6')
@@ -68,6 +70,33 @@ export function HomeView() {
     e.preventDefault()
     setSearch(query, '', city)
     runSearch()
+  }
+
+  const useMyLocation = () => {
+    if (!('geolocation' in navigator)) {
+      toast.error('Geolocation is not supported by your browser')
+      return
+    }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords
+        setUserLocation({ lat: latitude, lng: longitude, label: 'Current location' })
+        setLocating(false)
+        setSortBy('distance')
+        setSearch('', '')
+        runSearch()
+        toast.success('Location set — showing nearest providers')
+      },
+      (err) => {
+        setLocating(false)
+        const msg = err.code === 1
+          ? 'Location permission denied. Please allow location access.'
+          : 'Could not get your location. Please try again.'
+        toast.error(msg)
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    )
   }
 
   return (
@@ -112,6 +141,37 @@ export function HomeView() {
                 <Search className="h-4 w-4 mr-1" /> Search
               </Button>
             </form>
+
+            {/* Use My Location button */}
+            <div className="mt-3 flex justify-center">
+              {userLocation ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="bg-medical-soft/40 border-primary/40 text-primary"
+                  onClick={() => { setSearch('', ''); setSortBy('distance'); runSearch() }}
+                >
+                  <LocateFixed className="h-4 w-4 mr-1.5" />
+                  Continue with my location ({userLocation.lat.toFixed(2)}, {userLocation.lng.toFixed(2)})
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-primary hover:bg-medical-soft"
+                  onClick={useMyLocation}
+                  disabled={locating}
+                >
+                  {locating ? (
+                    <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Detecting your location...</>
+                  ) : (
+                    <><Navigation className="h-4 w-4 mr-1.5" /> Use my current location instead</>
+                  )}
+                </Button>
+              )}
+            </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
               <span className="flex items-center gap-1"><CheckCircle2 className="h-3 w-3 text-primary" /> 100% Verified Profiles</span>

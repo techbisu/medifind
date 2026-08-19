@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Star, MapPin, Phone, Clock, CheckCircle2, Stethoscope, Building2, Beaker } from 'lucide-react'
+import { Star, MapPin, Phone, Clock, CheckCircle2, Stethoscope, Building2, Beaker, Navigation } from 'lucide-react'
 import type { ProviderDTO } from '@/lib/providers'
 import { useAppStore } from '@/lib/store'
 import { PROVIDER_TYPE_LABELS } from '@/lib/providers'
@@ -13,6 +13,13 @@ const TYPE_ICONS: Record<string, React.ElementType> = {
   DOCTOR: Stethoscope,
   MEDICAL_SHOP: Building2,
   CLINIC_LAB: Beaker,
+}
+
+/** Format distance in km or m for compact display. */
+function formatDistance(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)} m`
+  if (km < 10) return `${km.toFixed(1)} km`
+  return `${Math.round(km)} km`
 }
 
 export function ProviderCard({ provider }: { provider: ProviderDTO }) {
@@ -49,6 +56,12 @@ export function ProviderCard({ provider }: { provider: ProviderDTO }) {
                 )}
               </div>
               <div className="flex items-center gap-1 shrink-0">
+                {typeof provider.distance === 'number' && (
+                  <Badge variant="outline" className="bg-medical-soft text-primary border-primary/20 px-1.5 py-0">
+                    <Navigation className="h-3 w-3 mr-0.5" />
+                    {formatDistance(provider.distance)}
+                  </Badge>
+                )}
                 {provider.verified && (
                   <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-1.5 py-0">
                     <CheckCircle2 className="h-3 w-3 mr-0.5" /> Verified
@@ -138,3 +151,4 @@ export function ProviderCard({ provider }: { provider: ProviderDTO }) {
     </Card>
   )
 }
+

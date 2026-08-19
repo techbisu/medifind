@@ -27,6 +27,30 @@ export interface SessionUser {
   phone?: string | null
 }
 
+export interface UserLocation {
+  lat: number
+  lng: number
+  label?: string // human-readable, e.g. "Current location" or "Noida, IN"
+}
+
+const LOCATION_STORAGE_KEY = 'medifind_user_location'
+
+/** Load saved location from localStorage (client-side only). */
+function loadSavedLocation(): UserLocation | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(LOCATION_STORAGE_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (typeof parsed?.lat === 'number' && typeof parsed?.lng === 'number') {
+      return parsed as UserLocation
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 interface AppState {
   // Navigation
   view: ViewName
@@ -36,6 +60,10 @@ interface AppState {
   searchType: string // '' | DOCTOR | MEDICAL_SHOP | CLINIC_LAB
   searchCity: string
   searchSpecialty: string
+  // Nearby search
+  userLocation: UserLocation | null
+  sortBy: 'default' | 'distance'
+  searchRadius: number | null // km, null = no filter
   // Auth
   user: SessionUser | null
   authLoading: boolean
@@ -47,6 +75,9 @@ interface AppState {
   openProvider: (slug: string, provider?: ProviderDTO) => void
   setSearch: (q: string, type?: string, city?: string, specialty?: string) => void
   runSearch: () => void
+  setUserLocation: (loc: UserLocation | null) => void
+  setSortBy: (s: 'default' | 'distance') => void
+  setSearchRadius: (r: number | null) => void
   setUser: (u: SessionUser | null) => void
   fetchSession: () => Promise<void>
   logout: () => Promise<void>
@@ -61,6 +92,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   searchType: '',
   searchCity: '',
   searchSpecialty: '',
+  userLocation: loadSavedLocation(),
+  sortBy: 'default',
+  searchRadius: null,
   user: null,
   authLoading: true,
   mobileMenuOpen: false,
@@ -101,6 +135,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setUser: (u) => set({ user: u, authLoading: false }),
+
+  setUserLocation: (loc) => {
+    set({ userLocation: loc })
+    if (typeof window !== 'undefined') {
+      try {
+        if (loc) {
+          window.localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(loc))
+        } else {
+          window.localStorage.removeItem(LOCATION_STORAGE_KEY)
+        }
+      } catch {}
+    }
+  },
+
+  setSortBy: (s) => set({ sortBy: s }),
+
+  setSearchRadius: (r) => set({ searchRadius: r }),
 
   fetchSession: async () => {
     try {

@@ -24,6 +24,8 @@ export interface ProviderDTO {
   reviewCount: number
   viewCount: number
   subscriptionTier: string
+  /** Distance in km from the user's location, if a location query was used */
+  distance?: number
   doctorProfile?: {
     specialty: string | null
     specialties: string[]
