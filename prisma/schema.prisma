@@ -59,6 +59,7 @@ model Provider {
   reviewCount     Int      @default(0)
   viewCount       Int      @default(0)
   subscriptionTier String  @default("FREE") // FREE | PRO | ENTERPRISE
+  bookingEnabled  Boolean  @default(true) // If false, patients see "Call to book" instead of online booking
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

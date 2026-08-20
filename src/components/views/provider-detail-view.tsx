@@ -128,17 +128,36 @@ export function ProviderDetailView() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 md:w-48">
-                  {provider.type === 'DOCTOR' && (
+                  {provider.type === 'DOCTOR' && provider.bookingEnabled && (
                     <Button size="lg" className="bg-medical-gradient" onClick={handleBook}>
                       <Calendar className="h-4 w-4 mr-2" /> Book Appointment
                     </Button>
                   )}
-                  {provider.phone && (
+                  {provider.type === 'DOCTOR' && !provider.bookingEnabled && (
+                    <div className="space-y-2">
+                      <Badge variant="outline" className="w-full justify-center bg-amber-50 text-amber-700 border-amber-200 py-1.5">
+                        <Clock className="h-3 w-3 mr-1" /> Online booking disabled
+                      </Badge>
+                      {provider.phone && (
+                        <Button size="lg" variant="default" className="w-full bg-medical-gradient" asChild>
+                          <a href={`tel:${provider.phone}`}>
+                            <Phone className="h-4 w-4 mr-2" /> Call to Book
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                  {provider.type !== 'DOCTOR' && provider.phone && (
                     <Button variant="outline" size="lg" asChild>
                       <a href={`tel:${provider.phone}`}>
                         <Phone className="h-4 w-4 mr-2" /> Call
                       </a>
                     </Button>
+                  )}
+                  {provider.type !== 'DOCTOR' && !provider.phone && (
+                    <Badge variant="outline" className="w-full justify-center bg-muted text-muted-foreground py-1.5">
+                      Visit in person
+                    </Badge>
                   )}
                 </div>
               </div>
@@ -325,6 +344,14 @@ export function ProviderDetailView() {
         {/* Schedule Tab (Doctors) */}
         {activeTab === 'schedule' && provider.type === 'DOCTOR' && (
           <div className="space-y-4">
+            {!provider.bookingEnabled && (
+              <Card className="border-amber-500/40 bg-amber-50/50">
+                <CardContent className="p-3 text-sm text-amber-900 flex items-center gap-2">
+                  <Clock className="h-4 w-4 shrink-0" />
+                  <span>This provider has disabled online booking. Please call to schedule an appointment.</span>
+                </CardContent>
+              </Card>
+            )}
             {provider.chambers && provider.chambers.length > 0 ? (
               provider.chambers.map((chamber: any) => <ChamberScheduleCard key={chamber.id} chamber={chamber} onBook={handleBook} />)
             ) : (
@@ -547,6 +574,9 @@ function ChamberScheduleCard({ chamber, onBook }: { chamber: any; onBook: () => 
         <Button className="w-full bg-medical-gradient mt-2" onClick={onBook}>
           <Calendar className="h-4 w-4 mr-2" /> Book Appointment at this Chamber
         </Button>
+        <p className="text-xs text-muted-foreground text-center mt-1">
+          You&apos;ll be asked to confirm date, time, and patient details on the next screen.
+        </p>
       </CardContent>
     </Card>
   )

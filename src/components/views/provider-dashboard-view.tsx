@@ -218,7 +218,71 @@ function OverviewTab({ provider }: { provider: ProviderDTO }) {
         <StatCard icon={Crown} label="Plan" value={provider.subscriptionTier} color="text-primary bg-medical-soft" />
         <StatCard icon={TrendingUp} label="Tier" value={provider.subscriptionTier} color="text-rose-600 bg-rose-50" />
       </div>
+
+      {/* Booking Toggle */}
+      <BookingToggleCard key={provider.id} provider={provider} />
     </div>
+  )
+}
+
+function BookingToggleCard({ provider }: { provider: ProviderDTO }) {
+  const [enabled, setEnabled] = useState(provider.bookingEnabled !== false)
+  const [saving, setSaving] = useState(false)
+
+  const toggle = async () => {
+    const next = !enabled
+    setEnabled(next)
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/dashboard/providers/${provider.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingEnabled: next }),
+      })
+      const data = await res.json()
+      if (data.error) {
+        setEnabled(!next) // revert
+        toast.error(data.error)
+      } else {
+        toast.success(next ? 'Online booking enabled' : 'Online booking disabled — patients will see "Call to Book"')
+      }
+    } catch {
+      setEnabled(!next)
+      toast.error('Failed to update booking setting')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-4 flex items-start justify-between gap-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-primary" />
+            <h4 className="font-semibold text-sm">Online Appointment Booking</h4>
+            <Badge variant="outline" className={enabled ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}>
+              {enabled ? 'ON' : 'OFF'}
+            </Badge>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {enabled
+              ? 'Patients can book appointments online through your profile. You\'ll receive requests in the Appointments tab.'
+              : 'Online booking is disabled. Patients will see your phone number with a "Call to Book" button instead. Useful for walk-in only practices or when you\'re on vacation.'}
+          </p>
+        </div>
+        <Button
+          variant={enabled ? 'default' : 'outline'}
+          size="sm"
+          className={enabled ? 'bg-medical-gradient' : 'border-amber-400 text-amber-700 hover:bg-amber-50'}
+          onClick={toggle}
+          disabled={saving}
+        >
+          {saving ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : null}
+          {enabled ? 'Enabled' : 'Disabled'}
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
 

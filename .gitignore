@@ -31,7 +31,12 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+# Note: .env.example is intentionally NOT ignored — it's a template for new developers
 
 # vercel
 .vercel
@@ -52,3 +57,28 @@ prompt
 server.log
 # Skills directory
 /skills/
+
+# Database (SQLite local dev)
+/db/*.db
+/db/*.db-journal
+
+# OS files
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Agent worklogs
+worklog.md
+agent-ctx/
+
+# Z.ai sandbox scripts
+.zscripts/
+
+# Downloaded artifacts
+/download/
+
+# Scripts temp
+/scripts/tmp/

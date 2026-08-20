@@ -24,6 +24,7 @@ export interface ProviderDTO {
   reviewCount: number
   viewCount: number
   subscriptionTier: string
+  bookingEnabled: boolean
   /** Distance in km from the user's location, if a location query was used */
   distance?: number
   doctorProfile?: {
@@ -72,6 +73,7 @@ export function toProviderDTO(p: any): ProviderDTO {
     reviewCount: p.reviewCount,
     viewCount: p.viewCount,
     subscriptionTier: p.subscriptionTier,
+    bookingEnabled: p.bookingEnabled ?? true,
     doctorProfile: p.doctorProfile
       ? {
           specialty: p.doctorProfile.specialty,

@@ -145,8 +145,13 @@ export function ProviderCard({ provider }: { provider: ProviderDTO }) {
             openProvider(provider.slug, provider)
           }}
         >
-          View {provider.type === 'DOCTOR' ? 'Profile & Book' : 'Details'}
+          View {provider.type === 'DOCTOR' ? (provider.bookingEnabled === false ? 'Profile' : 'Profile & Book') : 'Details'}
         </Button>
+        {provider.type === 'DOCTOR' && provider.bookingEnabled === false && (
+          <p className="text-[10px] text-center text-muted-foreground mt-1.5 flex items-center justify-center gap-1">
+            <Phone className="h-2.5 w-2.5" /> Call to book
+          </p>
+        )}
       </CardContent>
     </Card>
   )

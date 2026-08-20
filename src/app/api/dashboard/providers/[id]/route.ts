@@ -30,6 +30,7 @@ export async function PATCH(
   const body = await req.json()
   const {
     name, tagline, description, phone, email, website, address, city, area, pincode, latitude, longitude,
+    bookingEnabled,
     specialty, specialties, qualifications, experienceYears, consultationFee, languages, healthIssues, about, gender, registrationNo,
   } = body
 
@@ -39,6 +40,7 @@ export async function PATCH(
   }
   if (latitude !== undefined) update.latitude = latitude ? parseFloat(latitude) : null
   if (longitude !== undefined) update.longitude = longitude ? parseFloat(longitude) : null
+  if (typeof bookingEnabled === 'boolean') update.bookingEnabled = bookingEnabled
 
   const updated = await db.provider.update({
     where: { id },

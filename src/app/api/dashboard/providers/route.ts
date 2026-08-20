@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
     pincode,
     latitude,
     longitude,
+    bookingEnabled,
     // Doctor-specific
     specialty,
     specialties,
@@ -94,6 +95,7 @@ export async function POST(req: NextRequest) {
       longitude: longitude ? parseFloat(longitude) : null,
       status: 'PENDING',
       subscriptionTier: 'FREE',
+      bookingEnabled: bookingEnabled !== false, // default true unless explicitly false
       ...(type === 'DOCTOR' && {
         doctorProfile: {
           create: {

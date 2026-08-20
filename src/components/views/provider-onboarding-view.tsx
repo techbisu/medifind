@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
   Stethoscope, Building2, Beaker, ArrowRight, CheckCircle2, Loader2,
-  MapPin, Phone, Mail, Globe, User, Award, Languages, Heart
+  MapPin, Phone, Mail, Globe, User, Award, Languages, Heart, Calendar
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -52,6 +52,50 @@ export function ProviderOnboardingView() {
   const [gender, setGender] = useState('')
   const [registrationNo, setRegistrationNo] = useState('')
 
+  // Geocoding + booking
+  const [bookingEnabled, setBookingEnabled] = useState(true)
+  const [lat, setLat] = useState<string>('')
+  const [lng, setLng] = useState<string>('')
+  const [geocoding, setGeocoding] = useState(false)
+  const [mapsConfig, setMapsConfig] = useState<{ mapbox: boolean; google: boolean } | null>(null)
+
+  // Check which maps providers are configured (only once)
+  useEffect(() => {
+    fetch('/api/geocode')
+      .then((r) => r.json())
+      .then((d) => setMapsConfig({ mapbox: !!d.mapbox, google: !!d.google }))
+      .catch(() => setMapsConfig({ mapbox: false, google: false }))
+  }, [])
+
+  const geocodeAddress = async () => {
+    if (!address || address.length < 5) {
+      toast.error('Please enter a street address first (min 5 chars)')
+      return
+    }
+    setGeocoding(true)
+    try {
+      const res = await fetch('/api/geocode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, city, pincode }),
+      })
+      const data = await res.json()
+      if (data.error) {
+        toast.error(data.error)
+      } else if (data.lat && data.lng) {
+        setLat(data.lat.toFixed(6))
+        setLng(data.lng.toFixed(6))
+        toast.success(`Location detected via ${data.source}: ${data.formatted || 'coordinates set'}`)
+      } else {
+        toast.info(data.message || 'No maps provider configured. You can enter coordinates manually.')
+      }
+    } catch {
+      toast.error('Geocoding failed. Please try again or enter coordinates manually.')
+    } finally {
+      setGeocoding(false)
+    }
+  }
+
   if (!user) {
     return (
       <div className="container mx-auto max-w-2xl px-4 py-16 text-center animate-fade-in">
@@ -89,6 +133,9 @@ export function ProviderOnboardingView() {
         city,
         area,
         pincode,
+        latitude: lat || undefined,
+        longitude: lng || undefined,
+        bookingEnabled,
       }
 
       if (type === 'DOCTOR') {
@@ -325,6 +372,66 @@ export function ProviderOnboardingView() {
                     <Input id="pincode" value={pincode} onChange={(e) => setPincode(e.target.value)} placeholder="400050" />
                   </div>
                 </div>
+
+                {/* Geocoding helper */}
+                <div className="bg-muted/30 border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div>
+                      <div className="text-xs font-semibold flex items-center gap-1">
+                        <MapPin className="h-3 w-3 text-primary" /> Map Coordinates
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {mapsConfig?.mapbox || mapsConfig?.google
+                          ? `Auto-detect via ${mapsConfig.mapbox ? 'Mapbox' : 'Google Maps'} (free tier)`
+                          : 'Optional — set MAPBOX_ACCESS_TOKEN or GOOGLE_MAPS_API_KEY in .env for auto-detection'}
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={geocodeAddress}
+                      disabled={geocoding || !address}
+                    >
+                      {geocoding ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <MapPin className="h-3.5 w-3.5 mr-1" />}
+                      Auto-detect from address
+                    </Button>
+                  </div>
+                  {lat && lng && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-[10px] uppercase tracking-wider">Latitude</Label>
+                        <Input value={lat} onChange={(e) => setLat(e.target.value)} className="h-8 text-xs font-mono" />
+                      </div>
+                      <div>
+                        <Label className="text-[10px] uppercase tracking-wider">Longitude</Label>
+                        <Input value={lng} onChange={(e) => setLng(e.target.value)} className="h-8 text-xs font-mono" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Booking toggle (doctors only) */}
+                {type === 'DOCTOR' && (
+                  <div className="bg-muted/30 border rounded-lg p-3 flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-semibold flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5 text-primary" /> Online Appointment Booking
+                      </div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">
+                        When enabled, patients can book appointments online. Disable for walk-in only practices.
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setBookingEnabled(!bookingEnabled)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition shrink-0 ${bookingEnabled ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+                      aria-pressed={bookingEnabled}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${bookingEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
