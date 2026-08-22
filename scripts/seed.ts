@@ -1,7 +1,14 @@
 import { db } from '../src/lib/db'
+import { hashPassword } from '../src/lib/password'
 
 async function main() {
   console.log('🌱 Seeding database...')
+
+  // Pre-hash all passwords (same password for demo, different for clarity)
+  const adminPass = await hashPassword('admin123')
+  const doctorPass = await hashPassword('doctor123')
+  const shopPass = await hashPassword('shop123')
+  const labPass = await hashPassword('lab123')
 
   // ---------- PLANS ----------
   const plans = await Promise.all([
@@ -103,7 +110,7 @@ async function main() {
   const adminUser = await db.user.create({
     data: {
       email: 'admin@medifind.com',
-      password: 'admin123',
+      password: adminPass,
       name: 'Super Admin',
       role: 'ADMIN',
       phone: '+919999999999',
@@ -113,7 +120,7 @@ async function main() {
   const doctorUser = await db.user.create({
     data: {
       email: 'doctor@medifind.com',
-      password: 'doctor123',
+      password: doctorPass,
       name: 'Dr. Aryan Mehta',
       role: 'PROVIDER',
       phone: '+919876543210',
@@ -123,7 +130,7 @@ async function main() {
   const shopUser = await db.user.create({
     data: {
       email: 'shop@medifind.com',
-      password: 'shop123',
+      password: shopPass,
       name: 'Wellness Pharmacy',
       role: 'PROVIDER',
       phone: '+919812345678',
@@ -133,7 +140,7 @@ async function main() {
   const labUser = await db.user.create({
     data: {
       email: 'lab@medifind.com',
-      password: 'lab123',
+      password: labPass,
       name: 'Thrive Diagnostics',
       role: 'PROVIDER',
       phone: '+919812345679',
@@ -143,7 +150,7 @@ async function main() {
   const doctor2User = await db.user.create({
     data: {
       email: 'doctor2@medifind.com',
-      password: 'doctor123',
+      password: doctorPass,
       name: 'Dr. Priya Sharma',
       role: 'PROVIDER',
       phone: '+919876543211',

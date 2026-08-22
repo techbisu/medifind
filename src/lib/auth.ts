@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { createHmac } from 'crypto'
 import { db } from './db'
 
 export interface SessionUser {
@@ -11,13 +12,43 @@ export interface SessionUser {
 
 const SESSION_COOKIE = 'medifind_session'
 
+/**
+ * Sign a payload with AUTH_SECRET to prevent tampering.
+ * The cookie value is `base64(JSON.stringify(user)).hmac`.
+ * Without AUTH_SECRET, an attacker cannot forge a valid session.
+ */
+function sign(payload: string): string {
+  const secret = process.env.AUTH_SECRET || 'dev-only-fallback-secret-change-me'
+  const sig = createHmac('sha256', secret).update(payload).digest('hex')
+  return `${payload}.${sig}`
+}
+
+function verify(signed: string): string | null {
+  const idx = signed.lastIndexOf('.')
+  if (idx === -1) return null
+  const payload = signed.slice(0, idx)
+  const sig = signed.slice(idx + 1)
+  const expected = createHmac('sha256', process.env.AUTH_SECRET || 'dev-only-fallback-secret-change-me')
+    .update(payload)
+    .digest('hex')
+  // Constant-time compare to prevent timing attacks
+  if (sig.length !== expected.length) return null
+  let diff = 0
+  for (let i = 0; i < sig.length; i++) {
+    diff |= sig.charCodeAt(i) ^ expected.charCodeAt(i)
+  }
+  return diff === 0 ? payload : null
+}
+
 export async function getSession(): Promise<SessionUser | null> {
   const cookieStore = await cookies()
   const raw = cookieStore.get(SESSION_COOKIE)?.value
   if (!raw) return null
   try {
-    const parsed = JSON.parse(raw) as SessionUser
-    // Verify user still exists
+    const payload = verify(raw)
+    if (!payload) return null
+    const parsed = JSON.parse(Buffer.from(payload, 'base64').toString()) as SessionUser
+    // Verify user still exists and is active (prevents stale sessions)
     const user = await db.user.findUnique({
       where: { id: parsed.id },
       select: { id: true, email: true, name: true, role: true, phone: true },
@@ -37,9 +68,13 @@ export async function getSession(): Promise<SessionUser | null> {
 
 export async function setSession(user: SessionUser) {
   const cookieStore = await cookies()
-  cookieStore.set(SESSION_COOKIE, JSON.stringify(user), {
+  const payload = Buffer.from(JSON.stringify(user)).toString('base64')
+  const signed = sign(payload)
+  const isProd = process.env.NODE_ENV === 'production'
+  cookieStore.set(SESSION_COOKIE, signed, {
     httpOnly: true,
-    sameSite: 'lax',
+    secure: isProd, // HTTPS-only in production
+    sameSite: 'lax', // CSRF protection (strict would break provider-deep-links)
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: '/',
   })
