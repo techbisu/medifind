@@ -139,7 +139,10 @@ function OverviewTab() {
           <CardContent>
             <div className="text-4xl font-bold text-amber-600">{counts.pendingProviders}</div>
             <p className="text-sm text-muted-foreground mt-1">Providers awaiting review</p>
-            <Button size="sm" variant="outline" className="mt-3" onClick={() => document.querySelector('[value="providers"]')?.click()}>
+            <Button size="sm" variant="outline" className="mt-3" onClick={() => {
+              const el = document.querySelector('[value="providers"]') as HTMLButtonElement | null
+              el?.click()
+            }}>
               Review Now
             </Button>
           </CardContent>

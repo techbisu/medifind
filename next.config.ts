@@ -6,10 +6,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  // Don't ignore ESLint errors in production builds
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
+  // Note: Next.js 16 removed the `eslint` config key. Linting is now done
+  // via `next lint` or your eslint.config.mjs directly. To fail builds on
+  // lint errors, run `bun run lint` in your CI pipeline before `next build`.
   // Enable React strict mode to catch bugs in development
   reactStrictMode: true,
   // Security headers — applied to all responses

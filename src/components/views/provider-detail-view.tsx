@@ -362,27 +362,6 @@ export function ProviderDetailView() {
               </Card>
             )}
 
-            {/* If shop, show doctors with chambers here */}
-            {provider.type === 'MEDICAL_SHOP' && provider.shopChambers && provider.shopChambers.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Doctors Consulting Here</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {provider.shopChambers.map((chamber: any) => (
-                    <div key={chamber.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <div className="font-medium">{chamber.doctor.name}</div>
-                        <div className="text-xs text-muted-foreground">{chamber.visitingHours}</div>
-                      </div>
-                      <Button size="sm" variant="outline" onClick={() => openProvider(chamber.doctor.slug)}>
-                        View Profile
-                      </Button>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
           </div>
         )}
 

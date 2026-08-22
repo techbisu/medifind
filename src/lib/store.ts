@@ -73,7 +73,7 @@ interface AppState {
   // Actions
   setView: (v: ViewName) => void
   openProvider: (slug: string, provider?: ProviderDTO) => void
-  setSearch: (q: string, type?: string, city?: string, specialty?: string) => void
+  setSearch: (q: string | undefined, type?: string, city?: string, specialty?: string) => void
   runSearch: () => void
   setUserLocation: (loc: UserLocation | null) => void
   setSortBy: (s: 'default' | 'distance') => void
@@ -118,7 +118,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
-  setSearch: (q, type, city, specialty) => {
+  setSearch: (q: string | undefined, type?: string, city?: string, specialty?: string) => {
     set({
       ...(q !== undefined && { searchQuery: q }),
       ...(type !== undefined && { searchType: type }),

@@ -23,7 +23,7 @@ export function BookAppointmentView() {
   const { selectedProvider, selectedProviderSlug, setView, user } = useAppStore()
   const [provider, setProvider] = useState<ProviderDTO | null>(selectedProvider)
   const [chambers, setChambers] = useState<any[]>([])
-  const [loading, setLoading] = useState(!selectedProvider?.chambers)
+  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState<any>(null)
 
