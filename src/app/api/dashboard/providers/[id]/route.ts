@@ -35,7 +35,7 @@ export async function PATCH(
   } = body
 
   const update: any = {}
-  for (const k of ['name', 'tagline', 'description', 'phone', 'email', 'website', 'address', 'city', 'area', 'pincode']) {
+  for (const k of ['name', 'tagline', 'description', 'phone', 'email', 'website', 'address', 'city', 'area', 'pincode', 'logoUrl', 'coverUrl']) {
     if (k in body) update[k] = body[k]
   }
   if (latitude !== undefined) update.latitude = latitude ? parseFloat(latitude) : null

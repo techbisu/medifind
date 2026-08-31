@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { ImageUpload } from '@/components/ui/image-upload'
 import {
   Stethoscope, Building2, Beaker, ArrowRight, CheckCircle2, Loader2,
   MapPin, Phone, Mail, Globe, User, Award, Languages, Heart, Calendar
@@ -58,6 +59,7 @@ export function ProviderOnboardingView() {
   const [lng, setLng] = useState<string>('')
   const [geocoding, setGeocoding] = useState(false)
   const [mapsConfig, setMapsConfig] = useState<{ mapbox: boolean; google: boolean } | null>(null)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
   // Check which maps providers are configured (only once)
   useEffect(() => {
@@ -133,6 +135,7 @@ export function ProviderOnboardingView() {
         city,
         area,
         pincode,
+        logoUrl,
         latitude: lat || undefined,
         longitude: lng || undefined,
         bookingEnabled,
@@ -253,6 +256,11 @@ export function ProviderOnboardingView() {
                 <div>
                   <Label htmlFor="name">Practice / Doctor Name *</Label>
                   <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Dr. John Doe / Wellness Pharmacy" required />
+                </div>
+                {/* Logo Upload */}
+                <div>
+                  <Label>Profile Image / Logo</Label>
+                  <ImageUpload value={logoUrl} onChange={setLogoUrl} folder="providers" label="Logo" type="avatar" />
                 </div>
                 <div>
                   <Label htmlFor="tagline">Tagline (short headline)</Label>
