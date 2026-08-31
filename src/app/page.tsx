@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useAppStore } from '@/lib/store'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import { HomeView } from '@/components/views/home-view'
 import { SearchView } from '@/components/views/search-view'
 import { ProviderDetailView } from '@/components/views/provider-detail-view'
@@ -15,16 +16,19 @@ import { ProviderDashboardView } from '@/components/views/provider-dashboard-vie
 import { AdminDashboardView } from '@/components/views/admin-dashboard-view'
 
 export default function Home() {
-  const { view, fetchSession, authLoading } = useAppStore()
+  const { view, fetchSession } = useAppStore()
 
   useEffect(() => {
     fetchSession()
   }, [fetchSession])
 
+  // Show mobile bottom nav only on public-facing views
+  const showBottomNav = ['home', 'search', 'provider-detail', 'plans', 'login', 'register'].includes(view)
+
   return (
     <>
       <Header />
-      <main className="flex-1">
+      <main id="main-content" className="flex-1 pb-16 lg:pb-0">
         {view === 'home' && <HomeView />}
         {view === 'search' && <SearchView />}
         {view === 'provider-detail' && <ProviderDetailView />}
@@ -37,6 +41,7 @@ export default function Home() {
         {view === 'admin-dashboard' && <AdminDashboardView />}
       </main>
       <Footer />
+      {showBottomNav && <MobileBottomNav />}
     </>
   )
 }

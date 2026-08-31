@@ -8,13 +8,17 @@ import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { Breadcrumbs } from '@/components/ui/breadcrumbs'
+import { ProviderProfileSkeleton } from '@/components/ui/skeletons'
+import { ErrorState } from '@/components/ui/error-state'
 import {
   Star, MapPin, Phone, Mail, Globe, Clock, CheckCircle2, Calendar,
   Stethoscope, Building2, Beaker, ArrowLeft, Shield, Languages, GraduationCap,
-  Award, Pill, Microscope, Heart, User
+  Award, Pill, Microscope, Heart, User, Navigation, ChevronRight
 } from 'lucide-react'
 import type { ProviderDTO } from '@/lib/providers'
 import { PROVIDER_TYPE_LABELS, DAYS_OF_WEEK } from '@/lib/providers'
+import { providerJsonLd, generateProviderFaqs, faqJsonLd } from '@/lib/seo'
 
 interface ProviderDetail extends ProviderDTO {
   chambers?: any[]
@@ -28,6 +32,7 @@ export function ProviderDetailView() {
   const { selectedProviderSlug, selectedProvider, openProvider, setView } = useAppStore()
   const [provider, setProvider] = useState<ProviderDetail | null>(selectedProvider || null)
   const [loading, setLoading] = useState(!selectedProvider)
+  const [error, setError] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'services' | 'tests' | 'reviews'>('overview')
 
   useEffect(() => {
@@ -36,36 +41,78 @@ export function ProviderDetailView() {
       return
     }
     let cancelled = false
+    setLoading(true)
+    setError(false)
     fetch(`/api/providers/${selectedProviderSlug}`)
       .then((r) => r.json())
       .then((d) => {
         if (cancelled) return
-        if (d.provider) setProvider(d.provider)
+        if (d.provider) {
+          setProvider(d.provider)
+          // Inject JSON-LD structured data for SEO
+          const baseUrl = window.location.origin
+          const jsonLd = providerJsonLd(d.provider, baseUrl)
+          const faqs = generateProviderFaqs(d.provider)
+          const existing = document.getElementById('provider-jsonld')
+          if (existing) existing.remove()
+          const script = document.createElement('script')
+          script.type = 'application/ld+json'
+          script.id = 'provider-jsonld'
+          script.textContent = JSON.stringify(jsonLd)
+          document.head.appendChild(script)
+
+          if (faqs.length > 0) {
+            const faqScript = document.createElement('script')
+            faqScript.type = 'application/ld+json'
+            faqScript.id = 'provider-faq-jsonld'
+            faqScript.textContent = JSON.stringify(faqJsonLd(faqs))
+            document.head.appendChild(faqScript)
+          }
+
+          // Update document title for SEO
+          const specialty = d.provider.doctorProfile?.specialty
+          const city = d.provider.city
+          const newTitle = specialty
+            ? `${d.provider.name} — ${specialty}${city ? ` in ${city}` : ''} | MediFind`
+            : `${d.provider.name} | MediFind`
+          document.title = newTitle
+
+          // Update meta description
+          const metaDesc = document.querySelector('meta[name="description"]')
+          if (metaDesc) {
+            metaDesc.setAttribute('content',
+              `Book an appointment with ${d.provider.name}${specialty ? `, ${specialty}` : ''}${city ? ` in ${city}` : ''}. View qualifications, availability, consultation fee, reviews and chamber details on MediFind.`
+            )
+          }
+        }
         setLoading(false)
       })
-      .catch(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
+      .catch(() => {
+        if (!cancelled) {
+          setError(true)
+          setLoading(false)
+        }
+      })
+    return () => {
+      cancelled = true
+      // Cleanup JSON-LD on unmount
+      document.getElementById('provider-jsonld')?.remove()
+      document.getElementById('provider-faq-jsonld')?.remove()
+    }
   }, [selectedProviderSlug])
 
   if (loading) {
-    return (
-      <div className="container mx-auto max-w-6xl px-4 py-8">
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-48 w-full rounded-2xl" />
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-64 w-full rounded-xl" />
-        </div>
-      </div>
-    )
+    return <ProviderProfileSkeleton />
   }
 
-  if (!provider) {
+  if (error || !provider) {
     return (
-      <div className="container mx-auto max-w-6xl px-4 py-16 text-center">
-        <p className="text-muted-foreground">Provider not found.</p>
-        <Button onClick={() => setView('home')} className="mt-4">Back to Home</Button>
+      <div className="container mx-auto max-w-3xl px-4 py-8">
+        <ErrorState
+          title="Provider not found"
+          description="This provider may have been removed or is no longer available."
+          onRetry={() => setView('search')}
+        />
       </div>
     )
   }
@@ -79,11 +126,30 @@ export function ProviderDetailView() {
     setView('book-appointment')
   }
 
+  // Build breadcrumb items
+  const breadcrumbItems: { label: string; onClick?: () => void }[] = []
+  if (provider.type === 'DOCTOR' && provider.doctorProfile?.specialty) {
+    const spec = provider.doctorProfile.specialty
+    breadcrumbItems.push({ label: 'Doctors', onClick: () => { useAppStore.getState().setSearch('', 'DOCTOR'); useAppStore.getState().runSearch() } })
+    breadcrumbItems.push({ label: spec, onClick: () => { useAppStore.getState().setSearch(spec, 'DOCTOR'); useAppStore.getState().runSearch() } })
+    if (provider.city) breadcrumbItems.push({ label: provider.city, onClick: () => { useAppStore.getState().setSearch('', 'DOCTOR', provider.city || undefined); useAppStore.getState().runSearch() } })
+  } else if (provider.type === 'MEDICAL_SHOP') {
+    breadcrumbItems.push({ label: 'Pharmacies', onClick: () => { useAppStore.getState().setSearch('', 'MEDICAL_SHOP'); useAppStore.getState().runSearch() } })
+    if (provider.city) breadcrumbItems.push({ label: provider.city, onClick: () => { useAppStore.getState().setSearch('', 'MEDICAL_SHOP', provider.city || undefined); useAppStore.getState().runSearch() } })
+  } else if (provider.type === 'CLINIC_LAB') {
+    breadcrumbItems.push({ label: 'Labs', onClick: () => { useAppStore.getState().setSearch('', 'CLINIC_LAB'); useAppStore.getState().runSearch() } })
+    if (provider.city) breadcrumbItems.push({ label: provider.city, onClick: () => { useAppStore.getState().setSearch('', 'CLINIC_LAB', provider.city || undefined); useAppStore.getState().runSearch() } })
+  }
+  breadcrumbItems.push({ label: provider.name })
+
   return (
     <div className="container mx-auto max-w-6xl px-4 py-6 animate-fade-in">
-      <Button variant="ghost" size="sm" onClick={() => history.length > 1 ? history.back() : setView('search')} className="mb-4">
-        <ArrowLeft className="h-4 w-4 mr-1" /> Back
-      </Button>
+      <div className="flex items-center justify-between mb-4">
+        <Breadcrumbs items={breadcrumbItems} />
+        <Button variant="ghost" size="sm" onClick={() => history.length > 1 ? history.back() : setView('search')} className="hidden md:flex">
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+        </Button>
+      </div>
 
       {/* Header Card */}
       <Card className="overflow-hidden border-border/60 mb-6">
@@ -487,6 +553,38 @@ export function ProviderDetailView() {
           </div>
         )}
       </div>
+
+      {/* Sticky Mobile CTA */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-md border-t border-border safe-area-bottom">
+        <div className="grid grid-cols-2 gap-2 p-3">
+          {provider.phone && (
+            <Button variant="outline" size="lg" asChild>
+              <a href={`tel:${provider.phone}`}>
+                <Phone className="h-4 w-4 mr-2" /> Call
+              </a>
+            </Button>
+          )}
+          {provider.type === 'DOCTOR' && provider.bookingEnabled && (
+            <Button size="lg" className="bg-medical-gradient" onClick={handleBook}>
+              <Calendar className="h-4 w-4 mr-2" /> Book Now
+            </Button>
+          )}
+          {provider.type === 'DOCTOR' && !provider.bookingEnabled && provider.phone && (
+            <Button size="lg" className="bg-medical-gradient" asChild>
+              <a href={`tel:${provider.phone}`}>
+                <Phone className="h-4 w-4 mr-2" /> Call to Book
+              </a>
+            </Button>
+          )}
+          {provider.type !== 'DOCTOR' && !provider.phone && (
+            <Button variant="outline" size="lg" disabled>
+              Visit in person
+            </Button>
+          )}
+        </div>
+      </div>
+      {/* Spacer for sticky CTA on mobile */}
+      <div className="lg:hidden h-20" aria-hidden="true" />
     </div>
   )
 }

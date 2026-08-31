@@ -43,74 +43,112 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Pharmaceutical Theme - Teal/Emerald primary with medical clean look */
+/* ============================================================
+   PREMIUM HEALTHCARE DESIGN SYSTEM
+   Refined teal/emerald palette with medical blue accents
+   ============================================================ */
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.99 0.005 165);
-  --foreground: oklch(0.18 0.02 200);
+
+  /* Backgrounds */
+  --background: oklch(0.99 0.003 200);
+  --foreground: oklch(0.18 0.02 230);
+
+  /* Cards & surfaces */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 200);
+  --card-foreground: oklch(0.18 0.02 230);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 200);
-  --primary: oklch(0.55 0.13 175);
-  --primary-foreground: oklch(0.99 0.01 165);
-  --secondary: oklch(0.96 0.02 170);
-  --secondary-foreground: oklch(0.30 0.05 175);
-  --muted: oklch(0.97 0.008 170);
-  --muted-foreground: oklch(0.50 0.02 180);
-  --accent: oklch(0.94 0.04 175);
-  --accent-foreground: oklch(0.30 0.08 175);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.015 175);
-  --input: oklch(0.92 0.015 175);
-  --ring: oklch(0.55 0.13 175);
-  --chart-1: oklch(0.55 0.13 175);
-  --chart-2: oklch(0.65 0.16 145);
-  --chart-3: oklch(0.55 0.18 220);
-  --chart-4: oklch(0.78 0.18 80);
-  --chart-5: oklch(0.68 0.20 30);
-  --sidebar: oklch(0.985 0.005 165);
-  --sidebar-foreground: oklch(0.18 0.02 200);
-  --sidebar-primary: oklch(0.55 0.13 175);
-  --sidebar-primary-foreground: oklch(0.99 0.01 165);
-  --sidebar-accent: oklch(0.94 0.04 175);
-  --sidebar-accent-foreground: oklch(0.30 0.08 175);
-  --sidebar-border: oklch(0.91 0.015 175);
-  --sidebar-ring: oklch(0.55 0.13 175);
+  --popover-foreground: oklch(0.18 0.02 230);
+
+  /* Primary — Teal/Emerald (medical, trustworthy) */
+  --primary: oklch(0.50 0.11 178);
+  --primary-foreground: oklch(0.99 0.01 178);
+
+  /* Secondary — Soft mint */
+  --secondary: oklch(0.96 0.015 170);
+  --secondary-foreground: oklch(0.30 0.05 178);
+
+  /* Muted — Neutral slate */
+  --muted: oklch(0.97 0.005 220);
+  --muted-foreground: oklch(0.50 0.015 230);
+
+  /* Accent — Medical blue for highlights */
+  --accent: oklch(0.94 0.03 200);
+  --accent-foreground: oklch(0.30 0.08 220);
+
+  /* Status colors */
+  --destructive: oklch(0.55 0.22 27);
+  --success: oklch(0.60 0.14 145);
+  --warning: oklch(0.65 0.16 65);
+  --info: oklch(0.55 0.15 240);
+
+  /* Borders & inputs */
+  --border: oklch(0.91 0.005 200);
+  --input: oklch(0.92 0.005 200);
+  --ring: oklch(0.50 0.11 178);
+
+  /* Charts */
+  --chart-1: oklch(0.50 0.11 178);
+  --chart-2: oklch(0.60 0.14 145);
+  --chart-3: oklch(0.55 0.15 240);
+  --chart-4: oklch(0.70 0.15 65);
+  --chart-5: oklch(0.60 0.20 15);
+
+  /* Sidebar */
+  --sidebar: oklch(0.99 0.003 200);
+  --sidebar-foreground: oklch(0.18 0.02 230);
+  --sidebar-primary: oklch(0.50 0.11 178);
+  --sidebar-primary-foreground: oklch(0.99 0.01 178);
+  --sidebar-accent: oklch(0.94 0.03 200);
+  --sidebar-accent-foreground: oklch(0.30 0.08 220);
+  --sidebar-border: oklch(0.91 0.005 200);
+  --sidebar-ring: oklch(0.50 0.11 178);
 }
 
 .dark {
-  --background: oklch(0.16 0.015 200);
-  --foreground: oklch(0.96 0.01 170);
-  --card: oklch(0.21 0.02 195);
-  --card-foreground: oklch(0.96 0.01 170);
-  --popover: oklch(0.21 0.02 195);
-  --popover-foreground: oklch(0.96 0.01 170);
-  --primary: oklch(0.68 0.14 175);
-  --primary-foreground: oklch(0.18 0.02 200);
-  --secondary: oklch(0.27 0.025 190);
-  --secondary-foreground: oklch(0.96 0.01 170);
-  --muted: oklch(0.25 0.02 190);
-  --muted-foreground: oklch(0.72 0.02 175);
-  --accent: oklch(0.30 0.05 175);
-  --accent-foreground: oklch(0.96 0.01 170);
-  --destructive: oklch(0.704 0.191 22.216);
+  --background: oklch(0.16 0.012 230);
+  --foreground: oklch(0.96 0.005 200);
+
+  --card: oklch(0.20 0.015 230);
+  --card-foreground: oklch(0.96 0.005 200);
+  --popover: oklch(0.20 0.015 230);
+  --popover-foreground: oklch(0.96 0.005 200);
+
+  --primary: oklch(0.65 0.12 178);
+  --primary-foreground: oklch(0.16 0.012 230);
+
+  --secondary: oklch(0.26 0.02 230);
+  --secondary-foreground: oklch(0.96 0.005 200);
+
+  --muted: oklch(0.24 0.015 230);
+  --muted-foreground: oklch(0.70 0.015 220);
+
+  --accent: oklch(0.30 0.04 200);
+  --accent-foreground: oklch(0.96 0.005 200);
+
+  --destructive: oklch(0.65 0.20 25);
+  --success: oklch(0.65 0.14 145);
+  --warning: oklch(0.70 0.16 65);
+  --info: oklch(0.65 0.15 240);
+
   --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.68 0.14 175);
-  --chart-1: oklch(0.68 0.14 175);
-  --chart-2: oklch(0.72 0.17 145);
-  --chart-3: oklch(0.65 0.18 220);
-  --chart-4: oklch(0.78 0.18 80);
-  --chart-5: oklch(0.68 0.20 30);
-  --sidebar: oklch(0.21 0.02 195);
-  --sidebar-foreground: oklch(0.96 0.01 170);
-  --sidebar-primary: oklch(0.68 0.14 175);
-  --sidebar-primary-foreground: oklch(0.18 0.02 200);
-  --sidebar-accent: oklch(0.30 0.05 175);
-  --sidebar-accent-foreground: oklch(0.96 0.01 170);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.65 0.12 178);
+
+  --chart-1: oklch(0.65 0.12 178);
+  --chart-2: oklch(0.70 0.14 145);
+  --chart-3: oklch(0.65 0.15 240);
+  --chart-4: oklch(0.75 0.16 65);
+  --chart-5: oklch(0.65 0.20 15);
+
+  --sidebar: oklch(0.20 0.015 230);
+  --sidebar-foreground: oklch(0.96 0.005 200);
+  --sidebar-primary: oklch(0.65 0.12 178);
+  --sidebar-primary-foreground: oklch(0.16 0.012 230);
+  --sidebar-accent: oklch(0.30 0.04 200);
+  --sidebar-accent-foreground: oklch(0.96 0.005 200);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.68 0.14 175);
+  --sidebar-ring: oklch(0.65 0.12 178);
 }
 
 @layer base {
@@ -119,11 +157,26 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Focus visible — accessible focus indicator */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
-/* Custom scrollbar for long lists */
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
 .scroll-thin::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -132,28 +185,46 @@
   background: transparent;
 }
 .scroll-thin::-webkit-scrollbar-thumb {
-  background: oklch(0.55 0.13 175 / 0.3);
+  background: oklch(0.50 0.11 178 / 0.25);
   border-radius: 3px;
 }
 .scroll-thin::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.55 0.13 175 / 0.6);
+  background: oklch(0.50 0.11 178 / 0.5);
 }
 
-/* Pharmaceutical-themed gradients */
+/* ============================================================
+   GRADIENTS & PATTERNS
+   ============================================================ */
 .bg-medical-gradient {
-  background: linear-gradient(135deg, oklch(0.55 0.13 175) 0%, oklch(0.50 0.12 195) 100%);
+  background: linear-gradient(135deg, oklch(0.50 0.11 178) 0%, oklch(0.45 0.12 195) 100%);
 }
 .bg-medical-soft {
-  background: linear-gradient(135deg, oklch(0.97 0.02 170) 0%, oklch(0.96 0.03 185) 100%);
+  background: linear-gradient(135deg, oklch(0.97 0.015 170) 0%, oklch(0.96 0.025 190) 100%);
 }
 .text-medical-gradient {
-  background: linear-gradient(135deg, oklch(0.50 0.13 175) 0%, oklch(0.45 0.14 200) 100%);
+  background: linear-gradient(135deg, oklch(0.45 0.13 178) 0%, oklch(0.40 0.14 200) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Smooth fade-in for views */
+/* Medical cross pattern */
+.medical-pattern {
+  background-image:
+    radial-gradient(circle at 1px 1px, oklch(0.50 0.11 178 / 0.06) 1px, transparent 0);
+  background-size: 28px 28px;
+}
+
+/* Subtle dot grid */
+.dot-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, oklch(0.50 0.11 178 / 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -162,9 +233,78 @@
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Cross icon (medical) decoration */
-.medical-pattern {
-  background-image: 
-    radial-gradient(circle at 1px 1px, oklch(0.55 0.13 175 / 0.08) 1px, transparent 0);
-  background-size: 24px 24px;
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+@key shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg,
+    oklch(0.94 0.005 200) 25%,
+    oklch(0.97 0.005 200) 50%,
+    oklch(0.94 0.005 200) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   SAFE AREA (iOS notches, bottom nav)
+   ============================================================ */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ============================================================
+   LINE CLAMP UTILITIES
+   ============================================================ */
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
