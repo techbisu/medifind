@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { PROVIDER_INCLUDE, toProviderDTO } from '@/lib/providers'
 
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     ]
   }
 
-  const providers = await db.provider.findMany({
+  const providers = await safeQuery(() => db.provider.findMany({
     where,
     include: {
       ...PROVIDER_INCLUDE,
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     },
     orderBy: { createdAt: 'desc' },
     take: 200,
-  })
+  }), [])
 
   return NextResponse.json({ providers: providers.map(toProviderDTO) })
 }

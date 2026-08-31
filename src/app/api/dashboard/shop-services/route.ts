@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
@@ -42,9 +42,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'providerId required' }, { status: 400 })
   }
 
-  const services = await db.shopService.findMany({
+  const services = await safeQuery(() => db.shopService.findMany({
     where: { providerId },
     orderBy: { name: 'asc' },
-  })
+  }), [])
   return NextResponse.json({ services })
 }

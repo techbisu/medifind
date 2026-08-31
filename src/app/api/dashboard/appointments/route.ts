@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
@@ -13,10 +13,10 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get('status')
 
   // Get user's providers
-  const userProviders = await db.provider.findMany({
+  const userProviders = await safeQuery(() => db.provider.findMany({
     where: { userId: session.id },
     select: { id: true },
-  })
+  }), [])
   const providerIds = userProviders.map((p) => p.id)
 
   if (providerId && !providerIds.includes(providerId)) {
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
   }
   if (status) where.status = status
 
-  const appointments = await db.appointment.findMany({
+  const appointments = await safeQuery(() => db.appointment.findMany({
     where,
     include: {
       provider: { select: { id: true, name: true, slug: true, type: true } },
@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     },
     orderBy: { createdAt: 'desc' },
     take: 200,
-  })
+  }), [])
 
   return NextResponse.json({ appointments })
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { PROVIDER_INCLUDE, toProviderDTO, generateUniqueSlug } from '@/lib/providers'
 
@@ -10,7 +10,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const providers = await db.provider.findMany({
+  const providers = await safeQuery(() => db.provider.findMany({
     where: { userId: session.id },
     include: {
       ...PROVIDER_INCLUDE,
@@ -21,7 +21,7 @@ export async function GET() {
       },
     },
     orderBy: { createdAt: 'desc' },
-  })
+  }), [])
 
   return NextResponse.json({ providers: providers.map(toProviderDTO) })
 }

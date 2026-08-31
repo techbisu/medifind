@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
 export async function GET() {
@@ -22,40 +22,37 @@ export async function GET() {
     activeSubscriptions,
     reviews,
   ] = await Promise.all([
-    db.provider.count(),
-    db.provider.count({ where: { status: 'PENDING' } }),
-    db.provider.count({ where: { status: 'APPROVED' } }),
-    db.provider.count({ where: { type: 'DOCTOR' } }),
-    db.provider.count({ where: { type: 'MEDICAL_SHOP' } }),
-    db.provider.count({ where: { type: 'CLINIC_LAB' } }),
-    db.appointment.count(),
-    db.appointment.count({ where: { status: 'PENDING' } }),
-    db.user.count(),
-    db.subscription.count(),
-    db.subscription.count({ where: { status: 'ACTIVE' } }),
-    db.review.count(),
+    safeQuery(() => db.provider.count(), 0),
+    safeQuery(() => db.provider.count({ where: { status: 'PENDING' } }), 0),
+    safeQuery(() => db.provider.count({ where: { status: 'APPROVED' } }), 0),
+    safeQuery(() => db.provider.count({ where: { type: 'DOCTOR' } }), 0),
+    safeQuery(() => db.provider.count({ where: { type: 'MEDICAL_SHOP' } }), 0),
+    safeQuery(() => db.provider.count({ where: { type: 'CLINIC_LAB' } }), 0),
+    safeQuery(() => db.appointment.count(), 0),
+    safeQuery(() => db.appointment.count({ where: { status: 'PENDING' } }), 0),
+    safeQuery(() => db.user.count(), 0),
+    safeQuery(() => db.subscription.count(), 0),
+    safeQuery(() => db.subscription.count({ where: { status: 'ACTIVE' } }), 0),
+    safeQuery(() => db.review.count(), 0),
   ])
 
-  // Revenue from active subscriptions
-  const revenueAgg = await db.subscription.aggregate({
+  const revenueAgg = await safeQuery(() => db.subscription.aggregate({
     where: { status: 'ACTIVE' },
     _sum: { amountPaid: true },
-  })
+  }), { _sum: { amountPaid: 0 } })
 
-  // Subscription tier breakdown
-  const tierBreakdown = await db.provider.groupBy({
+  const tierBreakdown = await safeQuery(() => db.provider.groupBy({
     by: ['subscriptionTier'],
     _count: { _all: true },
-  })
+  }), [])
 
-  // Recent signups (last 7 days)
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-  const recentProviders = await db.provider.findMany({
+  const recentProviders = await safeQuery(() => db.provider.findMany({
     where: { createdAt: { gte: sevenDaysAgo } },
     select: { id: true, name: true, type: true, status: true, createdAt: true },
     orderBy: { createdAt: 'desc' },
     take: 10,
-  })
+  }), [])
 
   return NextResponse.json({
     counts: {
@@ -72,10 +69,10 @@ export async function GET() {
       activeSubscriptions,
       reviews,
     },
-    revenue: revenueAgg._sum.amountPaid || 0,
-    tierBreakdown: tierBreakdown.map((t) => ({
+    revenue: revenueAgg._sum?.amountPaid || 0,
+    tierBreakdown: tierBreakdown.map((t: any) => ({
       tier: t.subscriptionTier,
-      count: t._count._all,
+      count: t._count?._all || 0,
     })),
     recentProviders,
   })

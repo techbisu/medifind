@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
 const ReviewCreateSchema = z.object({
@@ -17,11 +17,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Valid providerId required' }, { status: 400 })
   }
 
-  const reviews = await db.review.findMany({
+  const reviews = await safeQuery(() => db.review.findMany({
     where: { providerId },
     orderBy: { createdAt: 'desc' },
     take: 50,
-  })
+  }), [])
   return NextResponse.json({ reviews })
 }
 

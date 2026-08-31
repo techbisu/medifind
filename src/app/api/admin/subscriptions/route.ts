@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { NextResponse } from 'next/server'
+import { db, safeQuery } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
 export async function GET() {
@@ -8,7 +8,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
-  const subscriptions = await db.subscription.findMany({
+  const subscriptions = await safeQuery(() => db.subscription.findMany({
     include: {
       provider: { select: { id: true, name: true, slug: true, type: true, subscriptionTier: true } },
       user: { select: { id: true, name: true, email: true } },
@@ -16,7 +16,7 @@ export async function GET() {
     },
     orderBy: { createdAt: 'desc' },
     take: 100,
-  })
+  }), [])
 
   return NextResponse.json({ subscriptions })
 }

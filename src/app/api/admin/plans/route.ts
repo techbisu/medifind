@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
 async function requireAdmin() {
@@ -9,12 +9,12 @@ async function requireAdmin() {
 }
 
 export async function GET() {
-  const plans = await db.plan.findMany({
+  const plans = await safeQuery(() => db.plan.findMany({
     orderBy: [{ price: 'asc' }],
     include: {
       _count: { select: { subscriptions: true } },
     },
-  })
+  }), [])
   return NextResponse.json({ plans })
 }
 

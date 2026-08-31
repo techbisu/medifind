@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 
 export async function POST(req: NextRequest) {
@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
     ]
   }
 
-  const chambers = await db.chamber.findMany({
+  const chambers = await safeQuery(() => db.chamber.findMany({
     where,
     include: {
       schedules: true,
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
       shop: { select: { id: true, name: true, slug: true } },
     },
     orderBy: { createdAt: 'asc' },
-  })
+  }), [])
 
   return NextResponse.json({ chambers })
 }

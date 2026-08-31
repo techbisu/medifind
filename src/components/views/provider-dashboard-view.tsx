@@ -32,11 +32,24 @@ export function ProviderDashboardView() {
     setLoading(true)
     try {
       const res = await fetch('/api/dashboard/providers')
-      const data = await res.json()
+      if (!res.ok) {
+        // Handle non-OK responses gracefully (e.g., DB unavailable on serverless)
+        setProviders([])
+        return
+      }
+      const text = await res.text()
+      if (!text) {
+        setProviders([])
+        return
+      }
+      const data = JSON.parse(text)
       setProviders(data.providers || [])
       if (data.providers?.length > 0 && !selectedProviderId) {
         setSelectedProviderId(data.providers[0].id)
       }
+    } catch {
+      // Network error or JSON parse error — show empty state
+      setProviders([])
     } finally {
       setLoading(false)
     }
