@@ -49,10 +49,17 @@ export async function getSession(): Promise<SessionUser | null> {
     if (!payload) return null
     const parsed = JSON.parse(Buffer.from(payload, 'base64').toString()) as SessionUser
     // Verify user still exists and is active (prevents stale sessions)
-    const user = await db.user.findUnique({
-      where: { id: parsed.id },
-      select: { id: true, email: true, name: true, role: true, phone: true },
-    })
+    // Use safeQuery pattern — if db is down, fall back to the cookie data
+    let user: { id: string; email: string; name: string; role: string; phone: string | null } | null = null
+    try {
+      user = await db.user.findUnique({
+        where: { id: parsed.id },
+        select: { id: true, email: true, name: true, role: true, phone: true },
+      })
+    } catch {
+      // Database unavailable — trust the signed cookie (it's HMAC-verified)
+      return parsed
+    }
     if (!user) return null
     return {
       id: user.id,

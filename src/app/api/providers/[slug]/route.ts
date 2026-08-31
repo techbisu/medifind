@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { PROVIDER_INCLUDE, toProviderDTO } from '@/lib/providers'
 
 export async function GET(
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const { slug } = await params
 
-  const provider = await db.provider.findUnique({
+  const provider = await safeQuery(() => db.provider.findUnique({
     where: { slug },
     include: {
       ...PROVIDER_INCLUDE,
@@ -33,7 +33,7 @@ export async function GET(
         take: 20,
       },
     },
-  })
+  }), null)
 
   if (!provider) {
     return NextResponse.json({ error: 'Provider not found' }, { status: 404 })

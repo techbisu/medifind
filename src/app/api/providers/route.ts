@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { PROVIDER_INCLUDE, toProviderDTO } from '@/lib/providers'
 
 /**
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
   const fetchLimit = (lat !== null && lng !== null) ? Math.max(limit, 100) : limit
 
   const [providersRaw, total] = await Promise.all([
-    db.provider.findMany({
+    safeQuery(() => db.provider.findMany({
       where,
       include: PROVIDER_INCLUDE,
       orderBy: [
@@ -70,8 +70,8 @@ export async function GET(req: NextRequest) {
       ],
       take: fetchLimit,
       skip: offset,
-    }),
-    db.provider.count({ where }),
+    }), []),
+    safeQuery(() => db.provider.count({ where }), 0),
   ])
 
   // Compute distance and apply radius filter when location is provided

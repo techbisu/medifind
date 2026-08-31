@@ -1,27 +1,28 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 
 /**
  * GET /api/health
  * Lightweight health check endpoint for load balancers, uptime monitors, and k8s probes.
  *
  * Returns 200 if the app can reach the database, 503 otherwise.
- * Does NOT expose internal details in production (security through obscurity —
- * real monitoring tools can use the status code).
+ * Does NOT expose internal details in production.
  */
 export async function GET() {
   try {
-    // Quick DB ping (cheap query)
-    await db.$queryRaw`SELECT 1`
+    // Quick DB ping (cheap query) — wrapped in safeQuery to avoid crash
+    const result = await safeQuery(async () => {
+      await db.$queryRaw`SELECT 1`
+      return true
+    }, false)
 
     return NextResponse.json(
       {
-        status: 'ok',
+        status: result ? 'ok' : 'degraded',
         timestamp: new Date().toISOString(),
-        // Don't leak version/commit in prod — attackers use it for targeted exploits
         env: process.env.NODE_ENV,
       },
-      { status: 200 }
+      { status: result ? 200 : 503 }
     )
   } catch (err) {
     console.error('Health check failed:', err)
@@ -30,7 +31,6 @@ export async function GET() {
         status: 'degraded',
         timestamp: new Date().toISOString(),
         env: process.env.NODE_ENV,
-        // In production, don't leak the error message
         error: process.env.NODE_ENV === 'production' ? 'Database unreachable' : String(err),
       },
       { status: 503 }

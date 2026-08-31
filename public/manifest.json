@@ -1,0 +1,21 @@
+{
+  "name": "MediFind — Healthcare Network",
+  "short_name": "MediFind",
+  "description": "Find trusted healthcare near you — doctors, pharmacies, and diagnostic labs.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0F766E",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["health", "medical", "lifestyle"],
+  "lang": "en-IN",
+  "dir": "ltr"
+}

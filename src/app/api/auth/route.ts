@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { db } from '@/lib/db'
+import { db, safeQuery } from '@/lib/db'
 import { setSession, clearSession, getSession } from '@/lib/auth'
 import { verifyPassword, isBcryptHash } from '@/lib/password'
 
@@ -21,9 +21,9 @@ export async function POST(req: NextRequest) {
     }
     const { email, password } = parsed.data
 
-    const user = await db.user.findUnique({
+    const user = await safeQuery(() => db.user.findUnique({
       where: { email },
-    })
+    }), null)
 
     // Generic error to prevent email enumeration
     const invalidCreds = () =>
